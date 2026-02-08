@@ -1,18 +1,18 @@
-
 x-spark-common: &spark-common
-    image: apache/spark:latest
-    volumes:
-       - ./jobs:/opt/spark/work-dir
-    command: /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077    
-    depends_on:
-      - spark-master
-    environment:
-      SPARK_MODE: Worker
-      SPARK_WORKER_CORES: 2
-      SPARK_WORKER_MEMORY: 1g
-      SPARK_MASTER_URL: spark://spark-master:7077
-    networks:
-       - datamasterylab
+  image: apache/spark:latest
+  volumes:
+    - ./jobs:/opt/spark/work-dir
+  environment:
+    SPARK_MODE: Worker
+    SPARK_WORKER_CORES: 2
+    SPARK_WORKER_MEMORY: 1g
+    SPARK_MASTER_URL: spark://spark-master:7077
+  command: /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
+  depends_on:
+    - spark-master
+  networks:
+    - datamasterylab
+
 
 services: 
   zookeeper:
@@ -68,15 +68,15 @@ services:
         timeout: 5s
         retries: 5 
   spark-master:
-     image: apache/spark:latest
-     volumes:
-       - ./jobs:/opt/spark/work-dir
-     command: /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
-     ports:
-       - "9090:8080"
-       - "7077:7077"
-     networks:
-       - datamasterylab
+    image: apache/spark:latest
+    volumes:
+      - ./jobs:/opt/spark/work-dir
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
+    ports:
+      - "9090:8080"
+      - "7077:7077"
+    networks:
+      - datamasterylab
   spark-worker-1:
      <<: *spark-common
   spark-worker-2:
@@ -87,4 +87,7 @@ services:
   #    <<: *spark-common
 networks:
  datamasterylab:
+
+volumes:
+  spark-ivy-cache:
 

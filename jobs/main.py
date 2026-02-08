@@ -144,10 +144,10 @@ def simulate_journery(producer, device_id):
             break 
 
         produce_data_to_kafka(producer, VECHILE_TOPIC, vechile_data)
-        produce_data_to_kafka(producer, VECHILE_TOPIC, gps_data)
-        produce_data_to_kafka(producer, VECHILE_TOPIC, traffic_camera_data)
-        produce_data_to_kafka(producer, VECHILE_TOPIC, weather_data)
-        produce_data_to_kafka(producer, VECHILE_TOPIC, emergency_incident_data)
+        produce_data_to_kafka(producer, GPS_TOPIC, gps_data)
+        produce_data_to_kafka(producer, TRAFFIC_TOPIC, traffic_camera_data)
+        produce_data_to_kafka(producer, WEATHER_TOPIC, weather_data)
+        produce_data_to_kafka(producer, EMERGENCY_TOPIC, emergency_incident_data)
 
         #time.sleep(5)
         break 
