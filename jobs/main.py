@@ -149,8 +149,8 @@ def simulate_journery(producer, device_id):
         produce_data_to_kafka(producer, WEATHER_TOPIC, weather_data)
         produce_data_to_kafka(producer, EMERGENCY_TOPIC, emergency_incident_data)
 
-        #time.sleep(5)
-        break 
+        time.sleep(5)
+        #break 
 
 if __name__ == '__main__':
     producer_config = { 

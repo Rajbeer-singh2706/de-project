@@ -107,11 +107,43 @@ def main():
     weatherDF = read_kafka_topic('weather_data', weatherSchema).alias('weather')
     emergencyDF = read_kafka_topic('emergency_data', emergencySchema).alias('emergency')
 
-    vechileDF.show()
-    gpsDF.show()
-    trafficDF.show()
-    weatherDF.show()
-    emergencyDF.show()
+    query1 = (
+        vechileDF
+          .writeStream
+          .format("console")
+          .outputMode("append")
+          .start()
+    )
+    query2 = (
+        gpsDF
+          .writeStream
+          .format("console")
+          .outputMode("append")
+          .start()
+    )
+    query3 = (
+        trafficDF
+          .writeStream
+          .format("console")
+          .outputMode("append")
+          .start()
+    )
+    query4 = (
+        weatherDF
+          .writeStream
+          .format("console")
+          .outputMode("append")
+          .start()
+    )
+    query5 = (
+        emergencyDF
+          .writeStream
+          .format("console")
+          .outputMode("append")
+          .start()
+    )
+    query5.awaitTermination()
+
 
     # query1 = streamWriter(vechileDF, 's3a://spark-streaming-data/checkpoints/vechile_data','s3a://spark-streaming-data/vechile_data')
     # query2 = streamWriter(gpsDF, 's3a://spark-streaming-data/checkpoints/gps_data','s3a://spark-streaming-data/gps_data')
