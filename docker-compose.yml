@@ -1,5 +1,5 @@
 x-spark-common: &spark-common
-  image: apache/spark:latest
+  image: apache/spark:3.4.1
   volumes:
     - ./jobs:/opt/spark/work-dir
   environment:
@@ -68,7 +68,7 @@ services:
         timeout: 5s
         retries: 5 
   spark-master:
-    image: apache/spark:latest
+    image: apache/spark:3.4.1
     volumes:
       - ./jobs:/opt/spark/work-dir
     command: /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master

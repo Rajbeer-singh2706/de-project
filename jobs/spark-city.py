@@ -7,9 +7,9 @@ from config import configuration
 def main():
     spark = SparkSession.builder.appName("SmartCityStreaming") \
                      .config("spark.jars.packages", 
-                             "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0,",
-                             "org.apache.hadoop:hadoop-aws:3.3.1,",
-                             "com.amazonaws:aws-java-sdk:1.11.469") \
+                             "org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.1,"
+                             "org.apache.hadoop:hadoop-aws:3.3.1,"
+                             "com.amazonaws:aws-java-sdk:1.11.901") \
                     .config("spark.hadoop.fs.s3a.impl","org.apache.hadoop.fs.s3a.S3AFileSystem")\
                     .config("spark.hadoop.fs.s3a.access.key",configuration.get("AWS_ACCESS_KEY"))\
                     .config("spark.hadoop.fs.s3a.secret.key",configuration.get("AWS_SECRET_KEY"))\
@@ -141,7 +141,7 @@ if __name__ == '__main__':
 
 ## First Run 
 
-docer exec -it smart
+#docer exec -it smart
 
 ## to check the cluster 
 ## localhost: 9090 
@@ -150,4 +150,4 @@ docer exec -it smart
 # docker exec -it smartcity-spark-master-1 spark-submit \ --master spark://spark-master:7077 \ --packages org.apache.spark:spark-sql-kafka-0_10_2.12:3.5.0,org.apache.hadoop:hadoop-aws:3.3.1,com.amazonaws:aws-java-sdk:1.11.469 jobs/spark-city.py
 
 ## start producing dataa as well 
-python jobs/main.py 
+#python jobs/main.py 
