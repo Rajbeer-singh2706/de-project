@@ -4,6 +4,7 @@ import simplejson as json
 from datetime import datetime, timedelta
 import random
 import uuid 
+import time 
 
 
 LONDON_COORDIATES = {"latitude": 51.5074, "longitude": -0.1278}
@@ -21,6 +22,7 @@ TRAFFIC_TOPIC = os.getenv('TRAFFIC_TOPIC','traffic_data')
 WEATHER_TOPIC = os.getenv('WEATHER_TOPIC','weather_data')
 EMERGENCY_TOPIC = os.getenv('EMERGENCY_TOPIC','emergency_data')
 
+random.seed(42)
 start_time = datetime.now()
 start_location = LONDON_COORDIATES.copy()
 
@@ -28,17 +30,6 @@ def get_next_time():
     global start_time
     start_time += timedelta(seconds=random.randint(30,60)) # update freqquncey
     return start_time
-
-def simulate_vechile_movement():
-    global start_location
-    # move towrads birmighgah 
-    start_location['latitude'] += LATITUDE_INCREMENT
-    start_location['longitude'] += LONGITUDE_INCREMENT
-
-    ## add some randomness to simulate acutal road tarvel
-    start_location['latitude'] +=  random.uniform(-0.0005, 0.0005)
-    start_location['longitude'] += random.uniform(-0.0005, 0.0005)
-    return start_location
 
 def generate_vechile_data(device_id):
     location = simulate_vechile_movement()
@@ -55,14 +46,114 @@ def generate_vechile_data(device_id):
         'fuelType': 'Hybrid'
     }
 
-def simulate_journery(producer, deivce_id):
+def generate_gps_data(device_id, timestamp, vechile_type ='priavte'):
+    return {
+        'id': uuid.uuid4(),
+        'device_id': device_id,
+        'timestamp': timestamp,
+        'speed': random.uniform(0, 40), # km/h 
+        'direction': 'North-East',
+        'vechileType': vechile_type,
+    }
+
+def generate_traffic_camera_data(device_id, timestamp, location, camera_id):
+    return {
+        'id': uuid.uuid4(),
+        'deviceId': device_id,
+        'location': location, 
+        'cameraId': camera_id,
+        'timestamp': timestamp,
+        'snapshot': 'Base64EncodedString'
+    }
+
+def generate_weather_data(device_id, timestamp, location):
+    return {
+        'id': uuid.uuid4(),
+        'deviceId': device_id,
+        'location': location ,
+        'timestamp': timestamp,
+        'temprature': random.uniform(-5, 26),
+        'weatherCondition': random.choice(['Sunny', 'Cloudy', 'Rain','Snow']),
+        'precipitation': random.uniform(0,25), 
+        'windSpeed': random.uniform(0,100),
+        'humidity': random.randint(0,100), # Percentage
+        'airQuaityIndex': random.uniform(0, 500) # AQI valuies goes here 
+    }
+
+def generate_emergency_incident_data(device_id, timestamp, location):
+    return {
+        'id': uuid.uuid4(),
+        'deviceId': device_id,
+        'location': location ,
+        'timestamp': timestamp,
+        'incidentId': uuid.uuid4(),
+        'type': random.choice(['Accident', 'Fire', 'Medical','Police', 'None']),
+        'status': random.choice(['Active', 'Resolved']),
+        'description': 'Description of the incident' 
+    }    
+
+def simulate_vechile_movement():
+    global start_location
+    # move towrads birmighgah 
+    start_location['latitude'] += LATITUDE_INCREMENT
+    start_location['longitude'] += LONGITUDE_INCREMENT
+
+    ## add some randomness to simulate acutal road tarvel
+    start_location['latitude'] +=  random.uniform(-0.0005, 0.0005)
+    start_location['longitude'] += random.uniform(-0.0005, 0.0005)
+    return start_location
+
+def json_serializer(obj):
+    if isinstance(obj , uuid.UUID):
+        return str(obj)
+    raise TypeError(f'Object of type: {obj.__class__.__name__} is not in JSON serializale')
+
+def delivery_report(err, msg):
+    if err is not None:
+        print(f'Message delivery failed: {err}')
+    else:
+        print(f'Message delivered to {msg.topic()}[{msg.partition()}]')
+
+def produce_data_to_kafka(producer, topic, data):
+    producer.produce(
+        topic, 
+        key=str(data['id']),
+        value=json.dumps(data, default=json_serializer).encode('utf-8'),
+        on_delivery=delivery_report
+    )
+    producer.flush()
+
+
+def simulate_journery(producer, device_id):
     while True:
-        vechile_data = generate_vechile_data(deivce_id)
-        print(vechile_data)
+        vechile_data = generate_vechile_data(device_id)
+        gps_data = generate_gps_data(device_id, vechile_data['timestamp'])
+        traffic_camera_data = generate_traffic_camera_data(device_id, vechile_data['timestamp'], vechile_data['location'],camera_id='Nikon-Cam123')
+        weather_data = generate_weather_data(device_id, vechile_data['timestamp'],vechile_data['location'])
+        emergency_incident_data = generate_emergency_incident_data(device_id,vechile_data['timestamp'],vechile_data['location'] )
+
+        #print(vechile_data)
+        # print(gps_data)
+        # print(traffic_camera_data)
+        # print(weather_data)
+        # print(emergency_incident_data)
+
+        if(vechile_data['location'][0] >= BIRMINGHAM_COORDIATES['latitude']
+           and vechile_data['location'][1] <= BIRMINGHAM_COORDIATES['longitude']):
+            print("Vechile has reached Birhimgha. simulatio ending...")
+            break 
+
+        produce_data_to_kafka(producer, VECHILE_TOPIC, vechile_data)
+        produce_data_to_kafka(producer, VECHILE_TOPIC, gps_data)
+        produce_data_to_kafka(producer, VECHILE_TOPIC, traffic_camera_data)
+        produce_data_to_kafka(producer, VECHILE_TOPIC, weather_data)
+        produce_data_to_kafka(producer, VECHILE_TOPIC, emergency_incident_data)
+
+        #time.sleep(5)
         break 
 
 if __name__ == '__main__':
-    producer_config = {
+    producer_config = { 
         'bootstrap.servers': KAFKA_BOOTSTRAP_SERVERS,
         'error_cb': lambda err: print(f'Kfaka error: {err}')
     }
@@ -73,3 +164,17 @@ if __name__ == '__main__':
         print('Simulation Edndee by the user')
     except Exception as e:
        print(f'Unexepcted Error occured: {e}')
+
+
+
+### RUN : : uu
+# python jobs/main.y
+# docker compose up -d
+
+## Contaner  >> broker  >> exec 
+## Command 1 
+## kafka-topics --list --bootstrap-server broker:29092
+
+
+## Command2 
+# kafka-console-consumer --topic vechile_data --bootstrap-server broker:9092 --from-beginning
